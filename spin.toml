@@ -1,0 +1,17 @@
+spin_version = "1"
+authors = ["Thorsten Hans <thorsten.hans@gmail.com>"]
+description = "Example to demonstrate CRUD in Fermyon Spin"
+name = "CRUD with MySQL"
+trigger = { type = "http", base = "/" }
+version = "0.1.0"
+
+# 
+[[component]]
+id = "crud-with-my-sql"
+source = "target/wasm32-wasi/release/crud_with_my_sql.wasm"
+[component.config]
+mysql_address = "mysql://spin:spin@127.0.0.1/products"
+[component.trigger]
+route = "/..."
+[component.build]
+command = "cargo build --target wasm32-wasi --release"
