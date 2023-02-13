@@ -1,16 +1,18 @@
-use anyhow::Result;
 mod config;
+mod demo;
 mod models;
 mod utils;
+
+use anyhow::Result;
 use config::Configuration;
 use http::HeaderValue;
 use models::{ProductCreateModel, ProductDetailsModel, ProductListModel, ProductUpdateModel};
 use utils::{bad_request, internal_server_error, method_not_allowed, no_content, not_found, ok};
-
+use demo::{handle_create};
 use spin_sdk::{
     http::{Request, Response},
     http_component,
-    mysql::{Decode, ParameterValue},
+    mysql::{ParameterValue},
 };
 
 enum Api {
@@ -101,27 +103,7 @@ fn api_from_request(req: Request) -> Api {
     }
 }
 
-fn handle_create(adr: &str, name: String, price: f32) -> Result<Response> {
-    let statement = "INSERT INTO Products (Name, Price) VALUES (?, ?)";
-    let params = vec![
-        ParameterValue::Str(name.as_str()),
-        ParameterValue::Floating32(price),
-    ];
 
-    spin_sdk::mysql::execute(adr, statement, &params)?;
-
-    let rowset = spin_sdk::mysql::query(adr, "SELECT LAST_INSERT_ID()", &[])?;
-    match rowset.rows.first() {
-        Some(row) => {
-            let id = u64::decode(&row[0])?;
-            Ok(http::Response::builder()
-                .status(http::StatusCode::CREATED)
-                .header(http::header::LOCATION, format!("/{}", id))
-                .body(None)?)
-        }
-        None => internal_server_error(String::from("Could not persist product")),
-    }
-}
 
 fn handle_read_by_id(adr: &str, id: u64) -> Result<Response> {
     let statement = "SELECT Name, Price FROM Products WHERE Id=?";
